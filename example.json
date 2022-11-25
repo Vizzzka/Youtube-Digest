@@ -1,0 +1,29 @@
+{
+  "kind": "youtube#activityListResponse",
+  "etag": "wBFHI9aBqlSWqBKSZX37cywFnpM",
+  "items": [
+    {
+      "kind": "youtube#activity",
+      "etag": "aGwJ7tBXqPnlpvJB_t9moMmkc9Y",
+      "id": "MTUxNjUzNjk2MDEwMTY1MzY5NjAxMDAwMDYwOQ",
+      "snippet": {
+        "publishedAt": "2022-05-28T00:00:10+00:00",
+        "channelId": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+        "title": "Build AI projects with the AIY Maker Kit #Shorts",
+        "description": "Watch the full episode ....",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/eIjlEHxlsfo/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "contentDetails": {
+            "upload": {
+              "videoId": "eIjlEHxlsfo"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
