@@ -3,8 +3,6 @@ from fastapi.responses import RedirectResponse
 import google_auth_oauthlib.flow
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
-import uvicorn
-import os
 from google.cloud import bigquery
 
 
@@ -37,7 +35,3 @@ async def main(request: Request):
     results = query_job.result("".format(chat_id, True))
 
     return RedirectResponse("https://t.me/youtube_videos_digest_bot")
-
-if __name__ == "__main__":
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-    uvicorn.run(app, host="0.0.0.0", port=8000)

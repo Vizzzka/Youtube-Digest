@@ -5,7 +5,7 @@ import authorize_user
 # Use the client_secret.json file to identify the application requesting
 # authorization. The client ID (from that file) and access scopes are required.
 flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-    'client_secret_668784317009-a22cokals81donercshr929k6hl1h967.apps.googleusercontent.com.json',
+    'client_secret_1066834567857-8flsq25qm601hgibojsjvspetvho8ula.apps.googleusercontent.com.json',
     scopes=["https://www.googleapis.com/auth/youtube.readonly"])
 
 # Indicate where the API server will redirect the user after the user completes
