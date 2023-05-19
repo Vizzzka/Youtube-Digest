@@ -18,7 +18,7 @@ async def main(request: Request):
         'client_secret_1066834567857-8flsq25qm601hgibojsjvspetvho8ula.apps.googleusercontent.com.json',
         scopes=["https://www.googleapis.com/auth/youtube.readonly"]
     )
-    flow.redirect_uri = 'http://localhost:8000/'
+    flow.redirect_uri = 'https://youtubedigestapp.de.r.appspot.com'
     flow.fetch_token(authorization_response=authorization_response)
 
 
