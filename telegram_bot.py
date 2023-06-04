@@ -3,10 +3,8 @@ from telegram.update import Update
 from telegram import ParseMode
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.ext.commandhandler import CommandHandler
-from telegram.ext.messagehandler import MessageHandler
-from telegram.ext.filters import Filters
-import urllib.parse
-from google.cloud import bigquery
+import googleapiclient.discovery
+import googleapiclient.errors
 import datetime
 import json
 import pytz
@@ -28,12 +26,92 @@ def help(update: Update, context: CallbackContext):
 
 
 def trends(update: Update, context: CallbackContext):
+
     f = open('trends.json', "r", encoding='utf-8')
     # Reading from file
-    data = json.loads(f.read())
+    data = {"videos": [{"name": "", "channel_name": "", "views": "", "number_in_trends": 1, "likes": "", "top_comment": "", "link_to_video": ""},
+                       {"name": "", "channel_name": "", "views": "", "number_in_trends": 1, "likes": "", "top_comment": "", "link_to_video": ""},
+                       {"name": "", "channel_name": "", "views": "", "number_in_trends": 1, "likes": "",
+                        "top_comment": "", "link_to_video": ""}
+                        ],
+                "client_id":  "1066834567857-8flsq25qm601hgibojsjvspetvho8ula",
+                "chat_id": 264147190,
+                "timestamp": 1689393
+            }
+    api_service_name = "youtube"
+    api_version = "v3"
+
+    youtube = googleapiclient.discovery.build(api_service_name, api_version)
+
+    request = youtube.videos().list(
+        part="contentDetails,snippet,statistics",
+        maxResults=3,
+        chart="mostPopular",
+        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        regionCode="UA"
+    )
+    data = {"videos": [{"name": "", "channel_name": "", "views": "", "number_in_trends": 1, "likes": "", "top_comment": "", "link_to_video": ""},
+                       {"name": "", "channel_name": "", "views": "", "number_in_trends": 2, "likes": "", "top_comment": "", "link_to_video": ""},
+                       {"name": "", "channel_name": "", "views": "", "number_in_trends": 3, "likes": "",
+                        "top_comment": "", "link_to_video": ""}]}
+
+    response = request.execute()
+    data["videos"][0]["name"] = response["items"][0]["snippet"]["title"]
+    data["videos"][1]["name"] = response["items"][1]["snippet"]["title"]
+    data["videos"][2]["name"] = response["items"][2]["snippet"]["title"]
+
+    data["videos"][0]["link_to_video"] = "https://www.youtube.com/watch?v={}".format(response["items"][0]["id"])
+    data["videos"][1]["link_to_video"] = "https://www.youtube.com/watch?v={}".format(response["items"][1]["id"])
+    data["videos"][2]["link_to_video"] = "https://www.youtube.com/watch?v={}".format(response["items"][2]["id"])
+
+    data["videos"][0]["views"] = response["items"][0]["statistics"]["viewCount"]
+    data["videos"][0]["likes"] = response["items"][0]["statistics"]["likeCount"]
+    data["videos"][1]["views"] = response["items"][1]["statistics"]["viewCount"]
+    data["videos"][1]["likes"] = response["items"][1]["statistics"]["likeCount"]
+    data["videos"][2]["views"] = response["items"][2]["statistics"]["viewCount"]
+    print(response["items"][2]["statistics"])
+    data["videos"][2]["likes"] = response["items"][2]["statistics"].get("likeCount", 0)
+
+    data["videos"][0]["channel_name"] = response["items"][0]["snippet"]["channelTitle"]
+    data["videos"][1]["channel_name"] = response["items"][1]["snippet"]["channelTitle"]
+    data["videos"][2]["channel_name"] = response["items"][2]["snippet"]["channelTitle"]
+
+    request = youtube.commentThreads().list(
+        part="snippet",
+        maxResults=1,
+        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        videoId=response["items"][0]["id"],
+        order="relevance"
+    )
+
+    response2 = request.execute()
+    data["videos"][0]["top_comment"] = response2["items"][0]["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
+
+
+    request = youtube.commentThreads().list(
+        part="snippet",
+        maxResults=1,
+        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        videoId=response["items"][1]["id"],
+        order="relevance"
+    )
+
+    response2 = request.execute()
+    data["videos"][1]["top_comment"] = response2["items"][0]["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
+
+    request = youtube.commentThreads().list(
+        part="snippet",
+        maxResults=1,
+        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        videoId=response["items"][2]["id"],
+        order="relevance"
+    )
+
+    response2 = request.execute()
+    data["videos"][2]["top_comment"] = response2["items"][0]["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
+
 
     message = from_json_to_tg_digest(data)
-    id = 264147190
     update.message.reply_text(text=message, parse_mode=ParseMode.HTML)
 
 
@@ -67,6 +145,8 @@ def from_json_to_tg_digest(digest_json):
 
 
 def number_of_views(views):
+    print(views)
+    views=int(views)
     if views > 1000000:
         return str(views // 1000000) + "M"
     else:

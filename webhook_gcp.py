@@ -28,9 +28,10 @@ async def main(request: Request):
 
     client = bigquery.Client()
     query_job = client.query(""
-                             "INSERT `DigestStorage.Users` (chat_id, youtube_id, is_active, token)"
-                             " VALUES({}, '{}', {}, JSON '{}')"
-                             .format(chat_id, credentials.client_id, True, credentials.to_json()))
+                             "INSERT `DigestStorage.Users` (chat_id, youtube_id, is_active, subscription_date, token)"
+                             " VALUES({}, '{}', {}, '{}', JSON '{}')"
+                             .format(chat_id, credentials.client_id, True, str(datetime.now())[:18], credentials.to_json()))
+
 
     results = query_job.result("".format(chat_id, True))
 

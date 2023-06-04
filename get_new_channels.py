@@ -7,7 +7,6 @@
 import os
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 from google.cloud import bigquery
@@ -24,6 +23,12 @@ def update_creds(user_id, creds, db_client):
     query_job.result()
 
 
+def create_subscription(user_id, channel_id, title, subDate, db_client):
+    query_job = db_client.query("INSERT `DigestStorage.Subscription` (chat_id, channel_id, is_active, subscription_date, channel_title)"
+                                " VALUES('{}', '{}', {}, '{}', '{}')".format(user_id, channel_id, True, subDate.replace("T", " ")[:18], title))
+    query_job.result()
+
+
 def get_new_channels_by_user_id(user_id, credentials_dct, db_client):
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
@@ -31,9 +36,9 @@ def get_new_channels_by_user_id(user_id, credentials_dct, db_client):
 
     api_service_name = "youtube"
     api_version = "v3"
-    client_secrets_file = "client_secret_668784317009-a22cokals81donercshr929k6hl1h967.apps.googleusercontent.com.json"
     creds = Credentials.from_authorized_user_info(credentials_dct, scopes)
-    if True:
+    if creds.expired:
+        print("expired")
         creds.refresh(Request())
         #write cred to db
         update_creds(user_id, creds, db_client)
@@ -46,7 +51,6 @@ def get_new_channels_by_user_id(user_id, credentials_dct, db_client):
         mine=True
     )
     response = request.execute()
-    print(response)
     return response
 
 
@@ -58,12 +62,12 @@ def get_channels_for_all_users(db_client):
         for r2 in r:
             row.append(r2)
         items = get_new_channels_by_user_id(row[0], json.loads(row[1]), db_client)["items"]
-        #query_job = db_client.query()
-
+        print(items)
+        for item in items:
+            create_subscription(row[0], item["snippet"]["resourceId"]["channelId"],
+                                item["snippet"]["title"], item["snippet"]["publishedAt"], db_client)
 
 
 if __name__ == "__main__":
     client = bigquery.Client()
-    credentials_dct = {"client_id":"1066834567857-8flsq25qm601hgibojsjvspetvho8ula.apps.googleusercontent.com","client_secret":"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","expiry":"2023-05-17T12:55:59.634012Z","scopes":["https://www.googleapis.com/auth/youtube.readonly"],"token":"ya29.a0AWY7Ckn0D0a13Y4Z_VP_5xi6p-FwjrvOe4OHnh_d485pKApWT5M-VplZZ12qljHVxyac-mrGLQ9QRcW9Uh8nEZ1-o-JZ3_5IAm4393x_mTQz7pbVLtu7sAG5EiTWkOChCSj14fC2l9WkQuiCtg3FMMrmjdBl-QaCgYKAU8SARASFQG1tDrpnYq8p5FcEeZa71BpCB9_rA0165","token_uri":"https://oauth2.googleapis.com/token"}
-    #channels = get_new_channels_by_user_id(264147190, credentials_dct, client)
     get_channels_for_all_users(client)
