@@ -65,11 +65,11 @@ def trends(update: Update, context: CallbackContext):
     data["videos"][2]["link_to_video"] = "https://www.youtube.com/watch?v={}".format(response["items"][2]["id"])
 
     data["videos"][0]["views"] = response["items"][0]["statistics"]["viewCount"]
-    data["videos"][0]["likes"] = response["items"][0]["statistics"]["likeCount"]
+    data["videos"][0]["likes"] = response["items"][0]["statistics"].get("likeCount", 0)
     data["videos"][1]["views"] = response["items"][1]["statistics"]["viewCount"]
-    data["videos"][1]["likes"] = response["items"][1]["statistics"]["likeCount"]
+    data["videos"][1]["likes"] = response["items"][1]["statistics"].get("likeCount", 0)
     data["videos"][2]["views"] = response["items"][2]["statistics"]["viewCount"]
-    print(response["items"][2]["statistics"])
+
     data["videos"][2]["likes"] = response["items"][2]["statistics"].get("likeCount", 0)
 
     data["videos"][0]["channel_name"] = response["items"][0]["snippet"]["channelTitle"]
@@ -85,7 +85,7 @@ def trends(update: Update, context: CallbackContext):
     )
 
     response2 = request.execute()
-    data["videos"][0]["top_comment"] = response2["items"][0]["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
+    data["videos"][0]["top_comment"] = response2["items"][0]["snippet"]["topLevelComment"]["snippet"]["textOriginal"].split("\n")[0]
 
 
     request = youtube.commentThreads().list(
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                       use_context=True)
 
     j = updater.job_queue
-    j.run_daily(daily_report, days=(0, 1, 2, 3, 4, 5, 6), time=datetime.time(hour=16, minute=24, second=00, tzinfo=pytz.timezone('Europe/Kiev')))
+    #j.run_daily(daily_report, days=(0, 1, 2, 3, 4, 5, 6), time=datetime.time(hour=16, minute=24, second=00, tzinfo=pytz.timezone('Europe/Kiev')))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('login', login))
