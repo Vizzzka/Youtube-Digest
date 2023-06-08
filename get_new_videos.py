@@ -6,6 +6,9 @@ from google.cloud import storage
 import json
 from datetime import datetime
 
+TG_TOKEN = os.environ.get("TELEGRAM_API_TOKEN")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
 
 def get_all_users_subs(db_client):
     query_job = db_client.query("SELECT chat_id, channel_id token FROM DigestStorage.Subscription")
@@ -55,7 +58,7 @@ def get_digest_by_video_id(video_id):
         part="contentDetails,snippet,statistics",
         maxResults=3,
         id=video_id,
-        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks"
+        key=GOOGLE_API_KEY
     )
     data = {"name": "", "channel_name": "", "views": "", "number_in_trends": "", "likes": "", "top_comment": "", "link_to_video": ""}
     response = request.execute()
@@ -68,7 +71,7 @@ def get_digest_by_video_id(video_id):
     request = youtube.commentThreads().list(
         part="snippet",
         maxResults=1,
-        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        key=GOOGLE_API_KEY,
         videoId=response["items"][0]["id"],
         order="relevance"
     )

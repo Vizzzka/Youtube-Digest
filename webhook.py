@@ -4,6 +4,7 @@ import google_auth_oauthlib.flow
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 import uvicorn
+import requests
 import os
 from google.cloud import bigquery
 from datetime import datetime
@@ -17,25 +18,38 @@ async def main(request: Request):
     parsed_url = urlparse(request.url._url)
     chat_id = parse_qs(parsed_url.query)['state'][0]
 
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        'client_secret_1066834567857-8flsq25qm601hgibojsjvspetvho8ula.apps.googleusercontent.com.json',
-        scopes=["https://www.googleapis.com/auth/youtube.readonly"]
-    )
-    flow.redirect_uri = 'http://localhost:8000/'
-    flow.fetch_token(authorization_response=authorization_response)
+    try:
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+            'client_secret_1066834567857-8flsq25qm601hgibojsjvspetvho8ula.apps.googleusercontent.com.json',
+            scopes=["https://www.googleapis.com/auth/youtube.readonly"]
+        )
+        flow.redirect_uri = 'http://localhost:8000/'
+        flow.fetch_token(authorization_response=authorization_response)
 
 
-    credentials = flow.credentials
-    #store token & client id
-    print(credentials.to_json())
+        credentials = flow.credentials
+        #store token & client id
+        print(credentials.to_json())
 
-    client = bigquery.Client()
-    query_job = client.query(""
+        client = bigquery.Client()
+        query_job = client.query(""
                              "INSERT `DigestStorage.Users` (chat_id, youtube_id, is_active, subscription_date, token)"
                              " VALUES({}, '{}', {}, '{}', JSON '{}')"
                              .format(chat_id, credentials.client_id, True, str(datetime.now())[:18], credentials.to_json()))
 
-    results = query_job.result("".format(chat_id, True))
+        results = query_job.result("".format(chat_id, True))
+        res = requests.post('https://api.telegram.org/bot5518802812:AAHl0feaoMycYUgpNukDJUQFiLLJztTBWtA/sendMessage',
+            headers = {
+            'Content-type': 'application/json'
+            },
+        json = {"chat_id": str(chat_id), "text": "You are successfully logged-in", "disable_notification": False},)
+        print(res.text)
+    except:
+        requests.post('https://api.telegram.org/bot5518802812:AAHl0feaoMycYUgpNukDJUQFiLLJztTBWtA/sendMessage',
+    headers = {
+        'Content-type': 'application/json'
+    },
+    json = {"chat_id": str(chat_id), "text": "You are not registered. Try again.", "disable_notification": False},)
 
     return RedirectResponse("https://t.me/youtube_videos_digest_bot")
 
