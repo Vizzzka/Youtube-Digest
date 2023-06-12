@@ -13,16 +13,12 @@ from google.cloud import bigquery
 import json
 from datetime import datetime
 from datetime import timedelta
-
+from utils import *
+import schedule
+import time
 
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
-
-
-def update_creds(user_id, creds, db_client):
-    query_job = db_client.query("UPDATE `DigestStorage.Users`"
-                                " SET token = JSON '{}'"
-                                " WHERE chat_id = {}".format(creds.to_json(), user_id))
-    query_job.result()
+client = bigquery.Client()
 
 
 def create_subscription(user_id, channel_id, title, subDate, registration_date, db_client):
@@ -59,19 +55,21 @@ def get_new_channels_by_user_id(user_id, credentials_dct, db_client):
     return response
 
 
-def get_channels_for_all_users(db_client):
-    query_job = db_client.query("SELECT chat_id, token, subscription_date FROM DigestStorage.Users")
+def get_channels_for_all_users():
+    query_job = client.query("SELECT chat_id, token, subscription_date FROM DigestStorage.Users")
     result = query_job.result()
     for r in result:
         row = []
         for r2 in r:
             row.append(r2)
-        items = get_new_channels_by_user_id(row[0], json.loads(row[1]), db_client)["items"]
+        items = get_new_channels_by_user_id(row[0], json.loads(row[1]), client)["items"]
         for item in items:
             create_subscription(row[0], item["snippet"]["resourceId"]["channelId"],
-                                item["snippet"]["title"], item["snippet"]["publishedAt"], row[2], db_client)
+                                item["snippet"]["title"], item["snippet"]["publishedAt"], row[2], client)
 
 
 if __name__ == "__main__":
-    client = bigquery.Client()
-    get_channels_for_all_users(client)
+    schedule.every().day.at("18:00").do(get_channels_for_all_users)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

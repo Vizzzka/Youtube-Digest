@@ -45,7 +45,7 @@ if __name__ == "__main__":
     request = youtube.commentThreads().list(
         part="snippet",
         maxResults=1,
-        key="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks",
+        key="",
         videoId=response["items"][2]["id"],
         order="relevance"
     )

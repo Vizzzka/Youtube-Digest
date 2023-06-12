@@ -3,41 +3,14 @@ from google.cloud import storage
 import telegram
 from telegram import ParseMode
 import json
+import os
+from utils import *
+import schedule
+import time
 
-
-def from_json_to_tg_digest(digest_json):
-    result = ""
-    for video in digest_json["videos"]:
-        s = "\U000027A1  <a href='{}'>{}</a> {} \n \U0001F440 <b>{} views</b> \n \U0001F44D <b> {} likes </b> \n \U0001F525 {} in trends \n \U0001F4E2 <i>{}</i> \n \n".format(video["link_to_video"],
-                                   video["name"],
-                                   video["channel_name"],
-                                   number_of_views(video["views"]),
-                                   number_of_views(video["likes"]),
-                                   number_in_trend(video["number_in_trends"]),
-                                   video["top_comment"])
-        result = result + s
-    return result
-
-
-def number_in_trend(number):
-    if number is None:
-        return "Not"
-    else:
-        return number
-
-
-def number_of_views(views):
-    views=int(views)
-    if views > 1000000:
-        return str(views // 1000000) + "M"
-    else:
-        if views > 1000:
-            return str(views / 1000) + "k"
-        else:
-            return str(views)
 
 def send_digest():
-    api_key = "5518802812:AAHl0feaoMycYUgpNukDJUQFiLLJztTBWtA"
+    api_key = os.environ.get("TELEGRAM_API_TOKEN")
     bot = telegram.Bot(token=api_key)
     storage_client = storage.Client()
 
@@ -54,4 +27,7 @@ def send_digest():
 
 
 if __name__ == "__main__":
-    send_digest()
+    schedule.every().day.at("20:00").do(send_digest)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

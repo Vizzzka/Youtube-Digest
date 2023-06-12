@@ -5,13 +5,22 @@ from google.cloud import bigquery
 from google.cloud import storage
 import json
 from datetime import datetime
+import schedule
+import time
+
 
 TG_TOKEN = os.environ.get("TELEGRAM_API_TOKEN")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
+client = bigquery.Client()
 
-def get_all_users_subs(db_client):
-    query_job = db_client.query("SELECT chat_id, channel_id token FROM DigestStorage.Subscription")
+
+def get_and_store_digests():
+    store_digests(get_all_users_subs())
+
+
+def get_all_users_subs():
+    query_job = client.query("SELECT chat_id, channel_id token FROM DigestStorage.Subscription")
     result = query_job.result()
     all_users = dict()
     for r in result:
@@ -24,7 +33,7 @@ def get_all_users_subs(db_client):
     return all_users
 
 
-def store_digests(all_users_dict, bucket_name):
+def store_digests(all_users_dict):
     digests = dict()
     for (key, value) in all_users_dict.items():
         videos_id = []
@@ -36,6 +45,7 @@ def store_digests(all_users_dict, bucket_name):
         digests[key] = {"videos": [get_digest_by_video_id(video_id) for video_id in videos_id]}
         #store to gcs
     to_gcs(digests)
+
 
 def to_gcs(digests):
     bucket_name = "youtube-digests"
@@ -92,12 +102,12 @@ def get_new_videos_by_channel_id(channel_id):
     api_service_name = "youtube"
     api_version = "v3"
 
-    youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey="AIzaSyC_pggkHUySm4NAzXUj652Pjrzckqb-_Ks")
+    youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey=GOOGLE_API_KEY)
 
     request = youtube.activities().list(
         part="contentDetails,snippet",
         maxResults=40,
-        publishedAfter="2023-06-03T23:00:00.0+02:00",
+        publishedAfter="2023-{}-{}T23:00:00.0+02:00".format(datetime.now().month, datetime.now().day),
         channelId=channel_id
     )
     response = request.execute()
@@ -105,5 +115,7 @@ def get_new_videos_by_channel_id(channel_id):
 
 
 if __name__ == "__main__":
-    db_client = bigquery.Client()
-    store_digests(get_all_users_subs(db_client), "")
+    schedule.every().day.at("19:00").do(get_and_store_digests)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
