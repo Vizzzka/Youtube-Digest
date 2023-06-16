@@ -42,7 +42,7 @@ def trends(update: Update, context: CallbackContext):
 
     api_service_name = "youtube"
     api_version = "v3"
-
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     youtube = googleapiclient.discovery.build(api_service_name, api_version)
 
     request = youtube.videos().list(
