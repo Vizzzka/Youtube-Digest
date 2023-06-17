@@ -22,7 +22,8 @@ async def main(request: Request):
     client = bigquery.Client()
     query_job = client.query("SELECT chat_id FROM DigestStorage.Users WHERE chat_id={}".format(chat_id))
     res = query_job.result()
-    if res.num_results() != 0:
+    k = len([el for el in res])
+    if k != 0:
         res = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(TG_TOKEN),
                             headers={
                                 'Content-type': 'application/json'
