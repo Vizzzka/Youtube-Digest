@@ -39,6 +39,7 @@ def help(update: Update, context: CallbackContext):
 
 
 def trends(update: Update, context: CallbackContext):
+    scopes2 = ["https://www.googleapis.com/auth/youtube.readonly", "https://www.googleapis.com/auth/youtube.force-ssl"]
     db_client = bigquery.Client()
     chat_id = 264147190
     query_job = db_client.query(
@@ -53,7 +54,7 @@ def trends(update: Update, context: CallbackContext):
     api_version = "v3"
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes)
+    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes2)
     if creds.expired:
         print("expired")
         creds.refresh(Request())
@@ -145,8 +146,9 @@ def get_subscriptions(update: Update, context: CallbackContext):
 
     api_service_name = "youtube"
     api_version = "v3"
+    scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
     scopes2 = ["https://www.googleapis.com/auth/youtube.readonly", "https://www.googleapis.com/auth/youtube.force-ssl"]
-    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes2)
+    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes if chat_id != 264147190 else scopes2)
     if creds.expired:
         print("expired")
         creds.refresh(Request())
