@@ -39,17 +39,33 @@ def help(update: Update, context: CallbackContext):
 
 
 def trends(update: Update, context: CallbackContext):
-
+    db_client = bigquery.Client()
+    chat_id = 264147190
+    query_job = db_client.query(
+        "SELECT chat_id, token, subscription_date FROM DigestStorage.Users WHERE chat_id={}".format(str(chat_id)))
+    result = query_job.result()
+    for r in result:
+        row = []
+        for r2 in r:
+            row.append(r2)
+        credentials_dct = row[1]
     api_service_name = "youtube"
     api_version = "v3"
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-    youtube = googleapiclient.discovery.build(api_service_name, api_version)
+
+    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes)
+    if creds.expired:
+        print("expired")
+        creds.refresh(Request())
+        # write cred to db
+        update_creds(chat_id, creds, db_client)
+
+    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=creds)
 
     request = youtube.videos().list(
         part="contentDetails,snippet,statistics",
         maxResults=3,
         chart="mostPopular",
-        key=GOOGLE_API_KEY,
         regionCode="UA"
     )
     data = {"videos": [{"name": "", "channel_name": "", "views": "", "number_in_trends": 1, "likes": "", "top_comment": "", "link_to_video": ""},
@@ -83,7 +99,6 @@ def trends(update: Update, context: CallbackContext):
     request = youtube.commentThreads().list(
         part="snippet",
         maxResults=1,
-        key=GOOGLE_API_KEY,
         videoId=response["items"][0]["id"],
         order="relevance"
     )
@@ -94,7 +109,6 @@ def trends(update: Update, context: CallbackContext):
     request = youtube.commentThreads().list(
         part="snippet",
         maxResults=1,
-        key=GOOGLE_API_KEY,
         videoId=response["items"][1]["id"],
         order="relevance"
     )
@@ -105,7 +119,6 @@ def trends(update: Update, context: CallbackContext):
     request = youtube.commentThreads().list(
         part="snippet",
         maxResults=1,
-        key=GOOGLE_API_KEY,
         videoId=response["items"][2]["id"],
         order="relevance"
     )
