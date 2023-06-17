@@ -145,7 +145,8 @@ def get_subscriptions(update: Update, context: CallbackContext):
 
     api_service_name = "youtube"
     api_version = "v3"
-    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes)
+    scopes2 = ["https://www.googleapis.com/auth/youtube.readonly", "https://www.googleapis.com/auth/youtube.force-ssl"]
+    creds = Credentials.from_authorized_user_info(json.loads(credentials_dct), scopes2)
     if creds.expired:
         print("expired")
         creds.refresh(Request())
